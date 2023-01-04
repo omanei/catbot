@@ -22,13 +22,20 @@ dp = Dispatcher(bot)
 
 @dp.message_handler(commands=['кот'])
 async def send_cat(message: types.Message):
+    data = dict()
+    text = message.get_args()
     async with aiohttp.ClientSession() as session:
-        async with session.get('https://cataas.com/cat?json=true') as resp:
-            if resp.status == 200:
-                data = await resp.read()
-                j = json.loads(data)
-                url = f"https://cataas.com{j['url']}"
-                await bot.send_photo(photo=url, chat_id=message.chat.id)
+        if text:
+            async with session.get(f'https://cataas.com/c/s/{text}?json=true') as resp:
+                if resp.status == 200:
+                    data = await resp.read()
+        else:
+            async with session.get('https://cataas.com/cat?json=true') as resp:
+                if resp.status == 200:
+                    data = await resp.read()
+    j = json.loads(data)
+    url = f"https://cataas.com{j['url']}"
+    await bot.send_photo(photo=url, chat_id=message.chat.id)
 
 
 if __name__ == '__main__':
