@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import aiohttp
+from urllib.parse import quote
 
 from aiogram import Bot, Dispatcher, executor, types
 from dotenv import load_dotenv
@@ -21,7 +22,7 @@ dp = Dispatcher(bot)
 @dp.message_handler(commands=['кот'])
 async def send_cat(message: types.Message):
     data = dict()
-    text = message.get_args()
+    text = quote(message.get_args())
     async with aiohttp.ClientSession() as session:
         if text:
             async with session.get(f'https://cataas.com/c/s/{text}?json=true') as resp:
