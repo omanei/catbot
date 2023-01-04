@@ -1,5 +1,9 @@
+import json
 import logging
 import os
+import aiohttp
+import asyncio
+from PIL import Image
 
 from aiogram import Bot, Dispatcher, executor, types
 from dotenv import load_dotenv
@@ -18,7 +22,13 @@ dp = Dispatcher(bot)
 
 @dp.message_handler(commands=['кот'])
 async def send_cat(message: types.Message):
-    await message.answer("I Send cat there!")
+    async with aiohttp.ClientSession() as session:
+        async with session.get('https://cataas.com/cat?json=true') as resp:
+            if resp.status == 200:
+                data = await resp.read()
+                j = json.loads(data)
+                url = f"https://cataas.com{j['url']}"
+                await bot.send_photo(photo=url, chat_id=message.chat.id)
 
 
 if __name__ == '__main__':
