@@ -36,6 +36,23 @@ async def send_cat(message: types.Message):
     url = f"https://cataas.com{j['url']}"
     await bot.send_photo(photo=url, chat_id=message.chat.id)
 
+@dp.message_handler(commands=['котгиф'])
+async def send_cat(message: types.Message):
+    data = dict()
+    text = quote(message.get_args())
+    async with aiohttp.ClientSession() as session:
+        if text:
+            async with session.get(f'https://cataas.com/c/gif/s/{text}?json=true') as resp:
+                if resp.status == 200:
+                    data = await resp.read()
+        else:
+            async with session.get('https://cataas.com/c/gif?json=true') as resp:
+                if resp.status == 200:
+                    data = await resp.read()
+    j = json.loads(data)
+    url = f"https://cataas.com{j['url']}"
+    await bot.send_animation(animation=url, chat_id=message.chat.id)
+    
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
