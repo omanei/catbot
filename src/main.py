@@ -19,38 +19,26 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
-@dp.message_handler(commands=['кот'])
-async def send_cat(message: types.Message):
-    data = dict()
-    text = quote(message.get_args())
+async def get_cat_url(text:str=None, gif:bool=None) -> str:
+    if text:  
+        text = f'/s/{quote(text)}'
+    gif = '/gif' if gif else ''
+    query_url = f'https://cataas.com/c{gif}{text}?json=true'
     async with aiohttp.ClientSession() as session:
-        if text:
-            async with session.get(f'https://cataas.com/c/s/{text}?json=true') as resp:
-                if resp.status == 200:
-                    data = await resp.read()
-        else:
-            async with session.get('https://cataas.com/cat?json=true') as resp:
-                if resp.status == 200:
-                    data = await resp.read()
-    j = json.loads(data)
-    url = f"https://cataas.com{j['url']}"
+        async with session.get(query_url) as resp:
+            if resp.status == 200:
+                data = await resp.read()
+                data = json.loads(data)
+    return f"https://cataas.com{data['url']}"
+       
+@dp.message_handler(commands=['кот', 'cat'])
+async def send_cat(message: types.Message) -> None:
+    url = await get_cat_url(text=message.get_args())
     await bot.send_photo(photo=url, chat_id=message.chat.id)
 
-@dp.message_handler(commands=['котгиф'])
+@dp.message_handler(commands=['котгиф', 'catgif'])
 async def send_cat(message: types.Message):
-    data = dict()
-    text = quote(message.get_args())
-    async with aiohttp.ClientSession() as session:
-        if text:
-            async with session.get(f'https://cataas.com/c/gif/s/{text}?json=true') as resp:
-                if resp.status == 200:
-                    data = await resp.read()
-        else:
-            async with session.get('https://cataas.com/c/gif?json=true') as resp:
-                if resp.status == 200:
-                    data = await resp.read()
-    j = json.loads(data)
-    url = f"https://cataas.com{j['url']}"
+    url = await get_cat_url(text=message.get_args(), gif=True)
     await bot.send_animation(animation=url, chat_id=message.chat.id)
     
 
